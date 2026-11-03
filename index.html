@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WorkOS" />
+  <meta name="theme-color" content="#05070b" />
+  <title>WorkOS</title>
+
+  <!-- App Icon & PWA Manifest for Add to Home Screen -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230f172a'/%3E%3Crect x='8' y='8' width='164' height='164' rx='34' fill='none' stroke='%233b82f6' stroke-width='4' stroke-opacity='0.4'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='%2360a5fa' font-family='sans-serif' font-weight='800' font-size='84'%3EW%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiV29ya09TIiwic2hvcnRfbmFtZSI6IldvcmtPUyIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDUwNzBiIiwidGhlbWVfY29sb3IiOiIjMDUwNzBiIn0=" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    if (window.tailwind) {
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      };
+    }
+  </script>
+
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #05070b;
+      background-image: 
+        radial-gradient(at 10% 0%, rgba(59, 130, 246, 0.14) 0px, transparent 50%),
+        radial-gradient(at 90% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+      color: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(105px + var(--safe-bottom));
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Sleek iOS Liquid Glass */
+    .glass {
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .glass-pill {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+    }
+
+    .ios-input {
+      background: rgba(9, 13, 22, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      font-size: 16px;
+      transition: all 0.15s ease;
+    }
+
+    .ios-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      outline: none;
+    }
+
+    .sheet-backdrop {
+      background: rgba(2, 4, 9, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* Centered Modal Wrapper - Keeps modals away from bottom iOS/Browser overlay buttons */
+    .modal-center-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(16px + var(--safe-top)) 16px calc(68px + var(--safe-bottom)) 16px;
+      overflow-y: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-height: calc(100vh - 110px - var(--safe-top) - var(--safe-bottom));
+      overflow-y: auto;
+      border-radius: 28px;
+      margin: auto;
+    }
+
+    /* Offline Fallback Utility Classes in case Tailwind CDN is unreachable */
+    .hidden { display: none !important; }
+    button, select, label { cursor: pointer; }
+    ::-webkit-scrollbar { width: 0px; height: 0px; }
+  </style>
+</head>
+<body class="min-h-screen select-none">
+
+  <!-- ==================== 1. SECURITY GATE ==================== -->
+  <div id="authGate" class="fixed inset-0 z-50 flex items-center justify-center p-5 bg-[#05070b]">
+    <div class="glass w-full max-w-[350px] rounded-[28px] p-6 space-y-5">
+      <div class="flex flex-col items-center text-center space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10">
+          <i data-lucide="fingerprint" class="w-6 h-6"></i>
+        </div>
+        <h1 class="text-lg font-bold tracking-tight text-white">WorkOS</h1>
+        <p class="text-[11px] text-slate-400">Offline Work & Finance Log</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1 p-1 bg-slate-900/90 rounded-2xl border border-white/5">
+        <button type="button" id="tabLoginBtn" onclick="switchAuthMode('login')" class="py-2 text-xs font-semibold rounded-xl bg-slate-800 text-white shadow transition">Login</button>
+        <button type="button" id="tabRegisterBtn" onclick="switchAuthMode('register')" class="py-2 text-xs font-semibold rounded-xl text-slate-400 transition">Register</button>
+      </div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3">
+        <input id="authUsername" type="text" required autocomplete="username" placeholder="Username" class="ios-input w-full px-4 py-3 rounded-2xl text-sm" />
+        <input id="authPasscode" type="password" required autocomplete="current-password" placeholder="Passcode" class="ios-input w-full px-4 py-3 rounded-2xl text-sm font-mono" />
+        <div id="authConfirmWrap" class="hidden">
+          <input id="authPasscodeConfirm" type="password" placeholder="Confirm Passcode" class="ios-input w-full px-4 py-3 rounded-2xl text-sm font-mono" />
+        </div>
+
+        <div id="authError" class="hidden text-xs text-rose-400 bg-rose-950/60 border border-rose-500/30 rounded-2xl p-3 text-center"></div>
+
+        <button type="submit" id="authSubmitBtn" class="w-full py-3.5 rounded-2xl bg-blue-600 active:scale-[0.98] text-white font-semibold text-sm transition shadow-lg shadow-blue-600/25">
+          Unlock
+        </button>
+      </form>
+
+      <div class="pt-3 border-t border-white/10">
+        <label class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-slate-300 flex items-center justify-center gap-2 cursor-pointer transition">
+          <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-400"></i>
+          <span>Restore Backup (.json)</span>
+          <input type="file" accept=".json,application/json" onchange="importFullBackupFile(event)" class="hidden" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. MAIN APP SHELL ==================== -->
+  <div id="appShell" class="hidden max-w-2xl mx-auto px-4 pt-3">
+
+    <!-- SLEEK TOP HEADER & COLLAPSIBLE KPI DOCK -->
+    <header class="sticky top-0 z-30 pt-1 pb-3 bg-[#05070b]/80 backdrop-blur-xl">
+      <div class="glass rounded-[24px] p-3.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 font-mono font-bold text-xs">W</div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span id="activeUserLabel" class="text-xs font-semibold text-white">@user</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="autoSaveBadge" class="text-[10px] font-mono text-emerald-400/80">Saved</span>
+              </div>
+              <div id="compactKpiLine" class="hidden text-[11px] font-mono text-rose-400 font-semibold">
+                Remaining: <span id="compactRem">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="togglePrivacyMask()" title="Hide/Show Amounts" class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-slate-300 active:scale-90 transition">
+              <i data-lucide="eye" id="privacyIcon" class="w-4 h-4 text-blue-400"></i>
+            </button>
+            <button onclick="toggleKpiCollapse()" title="Toggle Summary" class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-slate-300 active:scale-90 transition">
+              <i data-lucide="chevron-up" id="kpiToggleIcon" class="w-4 h-4"></i>
+            </button>
+            <button onclick="logoutUser()" title="Lock App" class="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 active:scale-90 transition">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clean 2x2 KPI Grid -->
+        <div id="kpiExpandedGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-white/10">
+          <div class="bg-slate-950/60 rounded-2xl p-2.5 border border-rose-500/20">
+            <div class="text-[10px] font-medium text-slate-400">Remaining</div>
+            <div id="kpiRem" class="text-sm font-mono font-bold text-rose-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/60 rounded-2xl p-2.5 border border-emerald-500/20">
+            <div class="text-[10px] font-medium text-slate-400">Paid</div>
+            <div id="kpiPaid" class="text-sm font-mono font-bold text-emerald-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/60 rounded-2xl p-2.5 border border-white/5">
+            <div class="text-[10px] font-medium text-slate-400">Total</div>
+            <div id="kpiTotal" class="text-sm font-mono font-bold text-white mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/60 rounded-2xl p-2.5 border border-amber-500/20">
+            <div class="text-[10px] font-medium text-amber-300/80">Invoices</div>
+            <div id="kpiInvoices" class="text-sm font-mono font-bold text-amber-300 mt-0.5">0</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== VIEW 1: PROJECTS GROUPED BY MONTH ==================== -->
+    <main id="view-projects" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <button onclick="openProjectFormModal()" class="py-2.5 px-4 rounded-2xl bg-blue-600 active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/25 shrink-0">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>New Project</span>
+        </button>
+
+        <select id="filterStatus" onchange="renderProjectsByMonth()" class="ios-input px-3 py-2.5 rounded-2xl text-xs font-medium flex-1">
+          <option value="ALL">All Projects</option>
+          <option value="UNPAID">Remaining (Unpaid)</option>
+          <option value="PAID">Paid</option>
+        </select>
+      </div>
+
+      <div id="monthlyProjectsContainer" class="space-y-6"></div>
+    </main>
+
+    <!-- ==================== VIEW 2: CALENDAR (EMPLOYER NAMES) ==================== -->
+    <section id="view-calendar" class="hidden space-y-3.5">
+      <div class="glass rounded-[26px] p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 id="calMonthHeader" class="text-sm font-bold text-white">November 2026</h2>
+          <div class="flex items-center gap-1">
+            <button onclick="stepCalMonth(-1)" class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-300 active:scale-90">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <button onclick="resetCalToday()" class="px-2.5 py-1 rounded-xl bg-white/5 text-[11px] font-medium text-slate-300">Today</button>
+            <button onclick="stepCalMonth(1)" class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-300 active:scale-90">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-mono text-slate-500 mb-1.5">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+
+      <!-- Selected Day Card -->
+      <div class="glass rounded-[24px] p-4 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span id="calSelectedDateLabel" class="text-xs font-mono font-bold text-blue-400">2026-11-03</span>
+          <button onclick="openWorkDayModal(null, selectedCalDate)" class="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-300 text-xs font-semibold flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Work Day</span>
+          </button>
+        </div>
+        <div id="calSelectedDayList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: INVOICES ==================== -->
+    <section id="view-invoices" class="hidden space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-white">Invoices & Receipts</h2>
+        <button onclick="openInvoiceModal()" class="py-2 px-3.5 rounded-2xl bg-amber-500 text-slate-950 text-xs font-bold flex items-center gap-1">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Invoice</span>
+        </button>
+      </div>
+      <div id="allInvoicesGrid" class="space-y-2.5"></div>
+    </section>
+
+    <!-- ==================== VIEW 4: BACKUP & CURRENCY ==================== -->
+    <section id="view-backup" class="hidden space-y-3.5">
+      <div class="glass rounded-[26px] p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-semibold text-white">Auto-Save & Offline Storage</div>
+            <div class="text-[11px] text-slate-400">All changes are saved automatically on this device.</div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Active</span>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-white/10">
+          <span class="text-xs font-semibold text-slate-300">Currency</span>
+          <select id="currencySelect" onchange="updateCurrency(this.value)" class="ios-input px-3 py-1.5 rounded-xl text-xs font-mono">
+            <option value="RON">RON</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+            <option value="HUF">HUF</option>
+            <option value="GBP">GBP</option>
+          </select>
+        </div>
+
+        <div class="pt-3 border-t border-white/10 grid grid-cols-1 gap-2.5">
+          <button type="button" onclick="exportCompleteBackupJSON()" class="py-3.5 rounded-2xl bg-emerald-600 active:scale-[0.98] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download Full Backup (.json)</span>
+          </button>
+
+          <button type="button" onclick="shareBackupFileIOS()" class="py-3 rounded-2xl bg-blue-600/20 border border-blue-500/30 active:scale-[0.98] text-blue-300 text-xs font-semibold flex items-center justify-center gap-2">
+            <i data-lucide="share" class="w-4 h-4"></i>
+            <span>Save to iPhone Files / Share (.json)</span>
+          </button>
+
+          <label class="py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+            <span>Restore Backup (.json)</span>
+            <input type="file" accept=".json,application/json" onchange="importFullBackupFile(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ==================== FLOATING iOS PILL TAB BAR ==================== -->
+  <nav id="bottomNav" class="hidden fixed bottom-[calc(12px+env(safe-area-inset-bottom))] inset-x-4 z-40 max-w-md mx-auto">
+    <div class="glass-pill rounded-3xl p-1.5 grid grid-cols-4 gap-1">
+      <button onclick="switchTab('projects')" id="tab-projects" class="flex flex-col items-center justify-center py-2 rounded-2xl bg-blue-600/20 text-blue-400 transition">
+        <i data-lucide="layers" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-0.5">Projects</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="tab-calendar" class="flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 transition">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-0.5">Calendar</span>
+      </button>
+      <button onclick="switchTab('invoices')" id="tab-invoices" class="flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 transition">
+        <i data-lucide="receipt" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-0.5">Invoices</span>
+      </button>
+      <button onclick="switchTab('backup')" id="tab-backup" class="flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 transition">
+        <i data-lucide="hard-drive" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold mt-0.5">Backup</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== MODAL 1: PROJECT DETAILS (CENTERED) ==================== -->
+  <div id="projectDetailModal" class="hidden modal-center-wrap sheet-backdrop">
+    <div class="glass modal-card max-w-xl flex flex-col overflow-hidden border border-white/15">
+      <!-- Header -->
+      <div class="p-4 sm:p-5 border-b border-white/10 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span id="detEmployer" class="text-xs font-bold text-blue-400 truncate">Client</span>
+            <span id="detStagePill" onclick="cycleActiveProjectStage()" class="cursor-pointer text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">In Progress</span>
+          </div>
+          <h3 id="detTitle" class="text-base font-bold text-white truncate mt-0.5">Project</h3>
+        </div>
+        <button onclick="closeProjectDetailModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 shrink-0">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="bg-slate-950/70 p-3 rounded-2xl border border-rose-500/30">
+            <div class="text-[10px] text-rose-400 font-medium">Remaining</div>
+            <div id="detRem" class="text-sm font-mono font-bold text-rose-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/70 p-3 rounded-2xl border border-emerald-500/20">
+            <div class="text-[10px] text-emerald-400 font-medium">Paid</div>
+            <div id="detPaid" class="text-sm font-mono font-bold text-emerald-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/70 p-3 rounded-2xl border border-white/5">
+            <div class="text-[10px] text-slate-400 font-medium">Total Labor</div>
+            <div id="detTotal" class="text-sm font-mono font-bold text-white mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-950/70 p-3 rounded-2xl border border-amber-500/25">
+            <div class="text-[10px] text-amber-300 font-medium">Invoices</div>
+            <div id="detInv" class="text-sm font-mono font-bold text-amber-300 mt-0.5">0</div>
+          </div>
+        </div>
+
+        <!-- Optional Base Fixed Amount Payment Bar -->
+        <div id="detFixedPaymentBar" class="hidden bg-slate-950/60 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+          <div class="text-xs text-slate-300">Fixed Base Paid:</div>
+          <div class="flex items-center gap-1.5">
+            <input id="detFixedPaidInput" type="number" step="0.01" class="ios-input w-28 px-2.5 py-1 rounded-xl text-xs font-mono text-right" />
+            <button onclick="saveFixedPaidAmount()" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold">OK</button>
+          </div>
+        </div>
+
+        <!-- Work Days List -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Work Days</span>
+            <button onclick="openWorkDayModal()" class="py-1.5 px-3 rounded-xl bg-blue-600 text-white text-xs font-semibold flex items-center gap-1 shadow-md shadow-blue-600/20">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Day</span>
+            </button>
+          </div>
+          <div id="detDaysList" class="space-y-2"></div>
+        </div>
+
+        <!-- Attached Invoices List -->
+        <div class="space-y-2.5 pt-2 border-t border-white/10">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-300/90">Invoices</span>
+            <button onclick="openInvoiceModal(activeProjectId)" class="py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-1">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <span>Attach Invoice</span>
+            </button>
+          </div>
+          <div id="detInvoicesList" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-3.5 border-t border-white/10 bg-slate-950/90 flex items-center justify-between">
+        <button onclick="deleteCurrentProject()" class="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+        <div class="flex gap-2">
+          <button onclick="editCurrentProject()" class="px-3.5 py-2 rounded-xl bg-white/5 text-slate-200 text-xs font-semibold">Edit</button>
+          <button onclick="closeProjectDetailModal()" class="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: NEW / EDIT PROJECT (CENTERED) ==================== -->
+  <div id="projectFormModal" class="hidden modal-center-wrap sheet-backdrop">
+    <div class="glass modal-card max-w-md p-5 space-y-4 border border-white/15">
+      <div class="flex items-center justify-between">
+        <h3 id="pfHeaderTitle" class="text-base font-bold text-white">New Project</h3>
+        <button onclick="closeProjectFormModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form id="projectForm" onsubmit="handleProjectSave(event)" class="space-y-3">
+        <input type="hidden" id="pfId" />
+        <input id="pfEmployer" type="text" required placeholder="Employer / Client Name *" class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-sm" />
+        <input id="pfTitle" type="text" required placeholder="Project Title *" class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-sm" />
+        <input id="pfLocation" type="text" required placeholder="Location *" class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-sm" />
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase text-slate-400 mb-1">Date Created</label>
+            <input id="pfCreatedAt" type="date" required class="ios-input w-full px-3 py-2 rounded-2xl text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase text-slate-400 mb-1">Stage</label>
+            <select id="pfStage" class="ios-input w-full px-3 py-2 rounded-2xl text-xs h-[38px]">
+              <option value="PLANNING">Planning / Quote</option>
+              <option value="IN_PROGRESS" selected>In Progress</option>
+              <option value="COMPLETED">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-1">
+          <label class="block text-[10px] uppercase text-slate-400 mb-1">Fixed Project Base Fee (Optional)</label>
+          <input id="pfFixedAmount" type="number" step="0.01" placeholder="0 (Leave empty if daily/hourly only)" class="ios-input w-full px-3.5 py-2 rounded-2xl text-sm font-mono" />
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-semibold text-sm shadow-lg shadow-blue-600/25">
+          Save Project
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: DAILY WORK EDITOR (CENTERED) ==================== -->
+  <div id="workDayModal" class="hidden modal-center-wrap sheet-backdrop">
+    <div class="glass modal-card max-w-md p-5 space-y-3.5 border border-white/15">
+      <div class="flex items-center justify-between">
+        <h3 id="wdModalHeader" class="text-base font-bold text-white">Work Day</h3>
+        <button onclick="closeWorkDayModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form id="workDayForm" onsubmit="handleWorkDaySave(event)" class="space-y-3">
+        <input type="hidden" id="wdEditId" />
+
+        <select id="wdProjectId" required class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-xs font-medium"></select>
+
+        <div class="grid grid-cols-2 gap-2">
+          <input id="wdDate" type="date" required class="ios-input w-full px-3 py-2 rounded-2xl text-xs font-mono" />
+          <input id="wdLocation" type="text" placeholder="Location" class="ios-input w-full px-3 py-2 rounded-2xl text-xs" />
+        </div>
+
+        <input id="wdDesc" type="text" required placeholder="Work description *" class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-sm" />
+
+        <!-- MODE SWITCHER: HOURLY CALCULATOR VS FIXED AMOUNT -->
+        <div class="grid grid-cols-2 gap-1 p-1 bg-slate-950/90 rounded-2xl border border-white/10">
+          <button type="button" id="wdModeHourlyBtn" onclick="switchWorkDayCalcMode('HOURLY')" class="py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white transition">
+            Hourly Calculator
+          </button>
+          <button type="button" id="wdModeFixedBtn" onclick="switchWorkDayCalcMode('FIXED')" class="py-2 rounded-xl text-xs font-semibold text-slate-400 transition">
+            Fixed Amount
+          </button>
+        </div>
+
+        <!-- 1. AUTO CALCULATOR PANEL -->
+        <div id="wdHourlyCalcPanel" class="p-3.5 rounded-2xl bg-slate-950/80 border border-blue-500/25 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-300 font-medium">Hourly Rate (<span class="currText">RON</span>/hr)</span>
+            <input id="wdHourlyRate" type="number" step="0.01" value="100" oninput="recalcDayEditor()" class="ios-input w-28 px-3 py-1.5 rounded-xl text-xs font-mono text-right" />
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400">Time Intervals</span>
+              <button type="button" onclick="addDayIntervalRow()" class="text-xs font-semibold text-blue-400 flex items-center gap-1">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                <span>+ Interval</span>
+              </button>
+            </div>
+            <div id="wdIntervalsBox" class="space-y-1.5"></div>
+          </div>
+
+          <div class="pt-2 border-t border-white/10 flex items-center justify-between">
+            <span id="wdCalcHoursText" class="text-xs font-mono text-amber-300">8.0 hrs</span>
+            <span id="wdCalcAmountText" class="text-sm font-mono font-bold text-emerald-400">800 RON</span>
+          </div>
+        </div>
+
+        <!-- 2. FIXED AMOUNT PANEL -->
+        <div id="wdFixedPanel" class="hidden p-3.5 rounded-2xl bg-slate-950/80 border border-white/10 flex items-center justify-between">
+          <span class="text-xs text-slate-300 font-medium">Daily Fixed Rate (<span class="currText">RON</span>)</span>
+          <input id="wdFixedAmountInput" type="number" step="0.01" placeholder="600" class="ios-input w-32 px-3 py-1.5 rounded-xl text-sm font-mono text-right" />
+        </div>
+
+        <!-- Paid Checkbox -->
+        <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-white/10 cursor-pointer">
+          <span class="text-xs font-semibold text-white">Mark this day as Paid</span>
+          <input id="wdPaid" type="checkbox" class="w-5 h-5 accent-emerald-500 rounded" />
+        </label>
+
+        <!-- Optional Quick Invoice on this day -->
+        <div id="wdQuickInvoiceWrap" class="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+          <div class="text-[11px] font-semibold text-amber-300">Attach Invoice to this day (Optional)</div>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="wdInvTitle" type="text" placeholder="Invoice title" class="ios-input px-3 py-1.5 rounded-xl text-xs" />
+            <input id="wdInvAmount" type="number" step="0.01" placeholder="Amount" class="ios-input px-3 py-1.5 rounded-xl text-xs font-mono" />
+          </div>
+          <input id="wdInvPhoto" type="file" accept="image/*" onchange="compressImage(event, 'wdInvPreview')" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-amber-500/20 file:text-amber-300" />
+          <img id="wdInvPreview" class="hidden max-h-24 rounded-xl border border-white/10" />
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-semibold text-sm shadow-lg shadow-blue-600/25">
+          Save Work Day
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: STANDALONE INVOICE UPLOAD (CENTERED) ==================== -->
+  <div id="invoiceModal" class="hidden modal-center-wrap sheet-backdrop">
+    <div class="glass modal-card max-w-md p-5 space-y-3.5 border border-white/15">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Attach Invoice</h3>
+        <button onclick="closeInvoiceModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form id="invoiceForm" onsubmit="handleInvoiceSave(event)" class="space-y-3">
+        <select id="invProjectId" required class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-xs"></select>
+        <input id="invTitle" type="text" required placeholder="Invoice / Receipt Title *" class="ios-input w-full px-3.5 py-2.5 rounded-2xl text-sm" />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="invAmount" type="number" step="0.01" required placeholder="Amount *" class="ios-input w-full px-3 py-2 rounded-2xl text-xs font-mono" />
+          <input id="invDate" type="date" required class="ios-input w-full px-3 py-2 rounded-2xl text-xs font-mono" />
+        </div>
+        <input type="file" accept="image/*" onchange="compressImage(event, 'invPhotoPreview')" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500/20 file:text-amber-300" />
+        <img id="invPhotoPreview" class="hidden max-h-32 rounded-xl border border-white/10" />
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20">
+          Save Invoice
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== LIGHTBOX ==================== -->
+  <div id="lightboxModal" onclick="closeLightbox()" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+    <div class="max-w-xl w-full space-y-2" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between text-white">
+        <span id="lightboxTitle" class="text-xs font-semibold truncate"></span>
+        <button onclick="closeLightbox()" class="p-2 rounded-full bg-white/10"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <img id="lightboxImage" src="" class="w-full max-h-[80vh] object-contain rounded-2xl" />
+    </div>
+  </div>
+
+  <script>
+    // Keep backwards-compatible keys so existing user projects & accounts are preserved
+    const ACCOUNTS_KEY = 'workos_v4_accounts';
+    const LAST_USER_KEY = 'workos_v4_last_user';
+    const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    let currentUser = null;
+    let authMode = 'login';
+    let isMasked = false;
+    let isKpiCollapsed = false;
+
+    let activeProjectId = null;
+    let dayCalcMode = 'HOURLY';
+    let tempPhotoData = null;
+
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+    let selectedCalDate = new Date().toISOString().slice(0, 10);
+
+    let db = {
+      currency: 'RON',
+      defaultHourlyRate: 100,
+      projects: []
+    };
+
+    // --- PERSISTENT STORAGE & INDEXEDDB MIRROR FOR AUTOMATIC PHONE STORAGE ---
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+
+    function openIDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return resolve(null);
+        const req = indexedDB.open('WorkOS_Offline_Storage', 1);
+        req.onupgradeneeded = e => {
+          const idb = e.target.result;
+          if (!idb.objectStoreNames.contains('kv')) idb.createObjectStore('kv');
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    async function idbSet(key, val) {
+      const idb = await openIDB();
+      if (!idb) return;
+      const tx = idb.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(val, key);
+    }
+
+    async function idbGet(key) {
+      const idb = await openIDB();
+      if (!idb) return null;
+      return new Promise(res => {
+        const tx = idb.transaction('kv', 'readonly');
+        const req = tx.objectStore('kv').get(key);
+        req.onsuccess = () => res(req.result || null);
+        req.onerror = () => res(null);
+      });
+    }
+
+    function flashAutoSaveBadge() {
+      const badge = document.getElementById('autoSaveBadge');
+      if (!badge) return;
+      badge.textContent = 'Saved ✓';
+      badge.style.opacity = '1';
+    }
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // --- CRYPTO SHA-256 ---
+    async function sha256(str) {
+      const buf = new TextEncoder().encode(str);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getStoredAccounts() {
+      const accV4 = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}');
+      const accEng = JSON.parse(localStorage.getItem('workos_eng_accounts') || '{}');
+      return Object.assign({}, accEng, accV4);
+    }
+
+    function saveStoredAccounts(accounts) {
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+      idbSet(ACCOUNTS_KEY, accounts);
+    }
+
+    // --- AUTH ---
+    function switchAuthMode(mode) {
+      authMode = mode;
+      document.getElementById('tabLoginBtn').className = mode === 'login' ? 'py-2 text-xs font-semibold rounded-xl bg-slate-800 text-white shadow transition' : 'py-2 text-xs font-semibold rounded-xl text-slate-400 transition';
+      document.getElementById('tabRegisterBtn').className = mode === 'register' ? 'py-2 text-xs font-semibold rounded-xl bg-slate-800 text-white shadow transition' : 'py-2 text-xs font-semibold rounded-xl text-slate-400 transition';
+      document.getElementById('authConfirmWrap').classList.toggle('hidden', mode === 'login');
+      document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Unlock' : 'Register';
+      document.getElementById('authError').classList.add('hidden');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const user = document.getElementById('authUsername').value.trim().toLowerCase();
+      const pass = document.getElementById('authPasscode').value;
+      const conf = document.getElementById('authPasscodeConfirm').value;
+      const accounts = getStoredAccounts();
+      const passHash = await sha256(user + '::' + pass);
+
+      if (authMode === 'register') {
+        if (pass.length < 4) return showAuthErr('Minimum 4 characters required!');
+        if (pass !== conf) return showAuthErr('Passcodes do not match!');
+        if (accounts[user]) return showAuthErr('Username already exists!');
+        accounts[user] = { username: user, passHash };
+        saveStoredAccounts(accounts);
+        unlockApp(user);
+      } else {
+        if (!accounts[user] || accounts[user].passHash !== passHash) return showAuthErr('Invalid username or passcode!');
+        unlockApp(user);
+      }
+    }
+
+    function showAuthErr(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    async function unlockApp(user) {
+      currentUser = user;
+      localStorage.setItem(LAST_USER_KEY, user);
+      document.getElementById('authGate').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+      document.getElementById('bottomNav').classList.remove('hidden');
+      document.getElementById('activeUserLabel').textContent = '@' + user;
+      await loadDb();
+      renderAll();
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      localStorage.removeItem(LAST_USER_KEY);
+      document.getElementById('authPasscode').value = '';
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('bottomNav').classList.add('hidden');
+      document.getElementById('authGate').classList.remove('hidden');
+    }
+
+    // --- DB & AUTOMATIC BACKGROUND SAVING ---
+    function getDbKey(u = currentUser) { return `workos_v4_db_${u}`; }
+
+    async function loadDb() {
+      let raw = localStorage.getItem(getDbKey()) || localStorage.getItem(`workos_eng_db_${currentUser}`);
+      if (raw) {
+        db = JSON.parse(raw);
+      } else {
+        const fromIdb = await idbGet(getDbKey());
+        if (fromIdb) {
+          db = fromIdb;
+        } else {
+          db = {
+            currency: 'RON',
+            defaultHourlyRate: 120,
+            projects: []
+          };
+        }
+        saveDb();
+      }
+      document.getElementById('currencySelect').value = db.currency || 'RON';
+      document.querySelectorAll('.currText').forEach(e => e.textContent = db.currency);
+    }
+
+    function saveDb() {
+      if (!currentUser) return;
+      const serialized = JSON.stringify(db);
+      localStorage.setItem(getDbKey(), serialized);
+      idbSet(getDbKey(), db);
+      flashAutoSaveBadge();
+    }
+
+    function getProjectMetrics(p) {
+      const days = p.days || [];
+      const invs = p.invoices || [];
+      const daysSum = days.reduce((a, d) => a + Number(d.amount || 0), 0);
+      const daysPaid = days.filter(d => d.paid).reduce((a, d) => a + Number(d.amount || 0), 0);
+
+      const baseFixed = Number(p.fixedAmount || 0);
+      const baseFixedPaid = Math.min(baseFixed, Number(p.fixedPaidAmount || 0));
+
+      const totalLabor = baseFixed + daysSum;
+      const paidLabor = Math.min(totalLabor, baseFixedPaid + daysPaid);
+      const remainingLabor = Math.max(0, totalLabor - paidLabor);
+      const invoicesTotal = invs.reduce((a, i) => a + Number(i.amount || 0), 0);
+
+      let status = 'UNPAID';
+      if (totalLabor > 0 && remainingLabor === 0) status = 'PAID';
+      else if (paidLabor > 0 && remainingLabor > 0) status = 'PARTIAL';
+
+      const pct = totalLabor > 0 ? Math.round((paidLabor / totalLabor) * 100) : 0;
+
+      return {
+        daysCount: days.length,
+        paidDaysCount: days.filter(d => d.paid).length,
+        totalLabor,
+        paidLabor,
+        remainingLabor,
+        invoicesTotal,
+        invoicesCount: invs.length,
+        status,
+        pct
+      };
+    }
+
+    function fmt(val) {
+      if (isMasked) return '•••• ' + db.currency;
+      return Number(val || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ' + db.currency;
+    }
+
+    function togglePrivacyMask() {
+      isMasked = !isMasked;
+      document.getElementById('privacyIcon').setAttribute('data-lucide', isMasked ? 'eye-off' : 'eye');
+      renderAll();
+    }
+
+    function toggleKpiCollapse() {
+      isKpiCollapsed = !isKpiCollapsed;
+      document.getElementById('kpiExpandedGrid').classList.toggle('hidden', isKpiCollapsed);
+      document.getElementById('compactKpiLine').classList.toggle('hidden', !isKpiCollapsed);
+      document.getElementById('kpiToggleIcon').setAttribute('data-lucide', isKpiCollapsed ? 'chevron-down' : 'chevron-up');
+      refreshIcons();
+    }
+
+    function updateCurrency(c) {
+      db.currency = c;
+      document.querySelectorAll('.currText').forEach(e => e.textContent = c);
+      saveDb();
+      renderAll();
+    }
+
+    function switchTab(tab) {
+      ['projects', 'calendar', 'invoices', 'backup'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+        document.getElementById(`tab-${t}`).className = t === tab
+          ? 'flex flex-col items-center justify-center py-2 rounded-2xl bg-blue-600/20 text-blue-400 transition'
+          : 'flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 transition';
+      });
+      refreshIcons();
+    }
+
+    // --- RENDER MASTER ---
+    function renderAll() {
+      renderKpi();
+      renderProjectsByMonth();
+      renderCalendar();
+      renderInvoicesTab();
+      if (activeProjectId) renderProjectDetail(activeProjectId);
+      refreshIcons();
+    }
+
+    function renderKpi() {
+      let rem = 0, paid = 0, tot = 0, inv = 0;
+      db.projects.forEach(p => {
+        const m = getProjectMetrics(p);
+        rem += m.remainingLabor;
+        paid += m.paidLabor;
+        tot += m.totalLabor;
+        inv += m.invoicesTotal;
+      });
+      document.getElementById('kpiRem').textContent = fmt(rem);
+      document.getElementById('kpiPaid').textContent = fmt(paid);
+      document.getElementById('kpiTotal').textContent = fmt(tot);
+      document.getElementById('kpiInvoices').textContent = fmt(inv);
+      document.getElementById('compactRem').textContent = fmt(rem);
+    }
+
+    // --- AUTOMATIC MONTHLY GROUPING FOR PROJECTS ---
+    function formatMonthGroupTitle(ym) {
+      const [y, m] = ym.split('-').map(Number);
+      return `${MONTHS_EN[(m || 1) - 1]} ${y}`;
+    }
+
+    function renderProjectsByMonth() {
+      const box = document.getElementById('monthlyProjectsContainer');
+      const filter = document.getElementById('filterStatus').value;
+
+      const filtered = db.projects.filter(p => {
+        const m = getProjectMetrics(p);
+        if (filter === 'UNPAID' && (m.remainingLabor === 0 && m.totalLabor > 0)) return false;
+        if (filter === 'PAID' && m.status !== 'PAID') return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        box.innerHTML = `<div class="glass rounded-[26px] p-10 text-center text-xs text-slate-500">No projects yet. Tap "New Project" to start.</div>`;
+        return;
+      }
+
+      const groups = {};
+      filtered
+        .slice()
+        .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+        .forEach(p => {
+          const ym = (p.createdAt || new Date().toISOString().slice(0, 10)).slice(0, 7);
+          if (!groups[ym]) groups[ym] = [];
+          groups[ym].push(p);
+        });
+
+      box.innerHTML = Object.keys(groups).sort().reverse().map(ym => {
+        const list = groups[ym];
+        const monthRem = list.reduce((acc, p) => acc + getProjectMetrics(p).remainingLabor, 0);
+
+        return `
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between px-1">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">${formatMonthGroupTitle(ym)}</h3>
+                <span class="text-[11px] font-mono text-slate-500">(${list.length})</span>
+              </div>
+              ${monthRem > 0 ? `<span class="text-[11px] font-mono text-rose-400 font-semibold">Remaining: ${fmt(monthRem)}</span>` : `<span class="text-[11px] font-mono text-emerald-400">Settled</span>`}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${list.map(p => renderProjectCardHTML(p)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProjectCardHTML(p) {
+      const m = getProjectMetrics(p);
+      const statusPill = m.status === 'PAID'
+        ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Paid</span>`
+        : m.status === 'PARTIAL'
+        ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Partial</span>`
+        : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">Unpaid</span>`;
+
+      const stageDot = p.stage === 'COMPLETED' ? 'Completed' : p.stage === 'PLANNING' ? 'Planning' : 'In Progress';
+
+      return `
+        <div onclick="openProjectDetail('${p.id}')" class="glass rounded-[24px] p-4 cursor-pointer active:scale-[0.98] transition hover:border-white/20 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-blue-400 truncate">${p.employer}</span>
+                <span class="text-[10px] text-slate-500">• ${stageDot}</span>
+              </div>
+              <h4 class="text-sm font-bold text-white truncate mt-0.5">${p.title}</h4>
+              <div class="text-[11px] text-slate-400 truncate">${p.location} • ${m.daysCount} days</div>
+            </div>
+            ${statusPill}
+          </div>
+
+          <div class="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
+            <div class="h-full ${m.status === 'PAID' ? 'bg-emerald-500' : 'bg-blue-500'} transition-all" style="width: ${m.pct}%"></div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 text-xs font-mono">
+            <div>
+              <span class="text-[10px] text-slate-500 block font-sans">Remaining</span>
+              <strong class="${m.remainingLabor > 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(m.remainingLabor)}</strong>
+            </div>
+            ${m.invoicesTotal > 0 ? `
+              <div class="text-center">
+                <span class="text-[10px] text-amber-300/70 block font-sans">Invoices</span>
+                <strong class="text-amber-300">${fmt(m.invoicesTotal)}</strong>
+              </div>
+            ` : ''}
+            <div class="text-right">
+              <span class="text-[10px] text-slate-500 block font-sans">Total</span>
+              <strong class="text-white">${fmt(m.totalLabor)}</strong>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- PROJECT DETAIL MODAL ---
+    function openProjectDetail(id) {
+      activeProjectId = id;
+      renderProjectDetail(id);
+      document.getElementById('projectDetailModal').classList.remove('hidden');
+      refreshIcons();
+    }
+
+    function closeProjectDetailModal() {
+      activeProjectId = null;
+      document.getElementById('projectDetailModal').classList.add('hidden');
+    }
+
+    function cycleActiveProjectStage() {
+      const p = db.projects.find(x => x.id === activeProjectId);
+      if (!p) return;
+      const order = ['PLANNING', 'IN_PROGRESS', 'COMPLETED'];
+      p.stage = order[(order.indexOf(p.stage || 'IN_PROGRESS') + 1) % 3];
+      saveDb();
+      renderAll();
+    }
+
+    function renderProjectDetail(id) {
+      const p = db.projects.find(x => x.id === id);
+      if (!p) return;
+      const m = getProjectMetrics(p);
+
+      document.getElementById('detEmployer').textContent = p.employer;
+      document.getElementById('detTitle').textContent = p.title;
+      document.getElementById('detStagePill').textContent = p.stage === 'COMPLETED' ? 'Completed' : p.stage === 'PLANNING' ? 'Planning' : 'In Progress';
+
+      document.getElementById('detRem').textContent = fmt(m.remainingLabor);
+      document.getElementById('detPaid').textContent = fmt(m.paidLabor);
+      document.getElementById('detTotal').textContent = fmt(m.totalLabor);
+      document.getElementById('detInv').textContent = fmt(m.invoicesTotal);
+
+      const fixedBar = document.getElementById('detFixedPaymentBar');
+      if (Number(p.fixedAmount || 0) > 0) {
+        fixedBar.classList.remove('hidden');
+        document.getElementById('detFixedPaidInput').value = p.fixedPaidAmount || 0;
+      } else {
+        fixedBar.classList.add('hidden');
+      }
+
+      const dBox = document.getElementById('detDaysList');
+      if (!p.days || p.days.length === 0) {
+        dBox.innerHTML = `<div class="p-4 rounded-2xl bg-slate-950/40 text-center text-xs text-slate-500">No work days logged yet.</div>`;
+      } else {
+        dBox.innerHTML = p.days.map(d => {
+          const intervalsBadge = (d.intervals && d.intervals.length > 0)
+            ? d.intervals.map(iv => `${iv.start}–${iv.end}`).join(', ') + ` (${d.totalHours}h)`
+            : 'Fixed daily rate';
+
+          return `
+            <div class="p-3 rounded-2xl bg-slate-950/75 border ${d.paid ? 'border-emerald-500/25' : 'border-white/10'} flex items-center justify-between gap-2.5">
+              <div class="flex items-center gap-3 min-w-0">
+                <button onclick="toggleDayPaid('${p.id}', '${d.id}')"
+                  class="w-6 h-6 rounded-xl flex items-center justify-center shrink-0 transition ${
+                    d.paid ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 border border-white/20 text-transparent'
+                  }">
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                </button>
+                <div onclick="openWorkDayModal('${d.id}')" class="min-w-0 cursor-pointer">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-mono font-bold text-white">${d.date}</span>
+                    <span class="text-[10px] font-mono text-slate-400 truncate">${intervalsBadge}</span>
+                  </div>
+                  <div class="text-xs text-slate-300 truncate">${d.description}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-mono font-bold ${d.paid ? 'text-emerald-400' : 'text-white'}">${fmt(d.amount)}</span>
+                <button onclick="deleteDay('${p.id}', '${d.id}')" class="p-1 text-slate-500 hover:text-rose-400">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const iBox = document.getElementById('detInvoicesList');
+      if (!p.invoices || p.invoices.length === 0) {
+        iBox.innerHTML = `<div class="p-4 rounded-2xl bg-slate-950/40 text-center text-xs text-slate-500">No attached invoices.</div>`;
+      } else {
+        iBox.innerHTML = p.invoices.map(inv => `
+          <div class="p-2.5 rounded-2xl bg-slate-950/75 border border-amber-500/20 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              ${inv.imageData ? `<img src="${inv.imageData}" onclick="openLightbox('${inv.imageData}', '${inv.title}')" class="w-10 h-10 rounded-xl object-cover cursor-zoom-in shrink-0" />` : `<div class="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0"><i data-lucide="receipt" class="w-4 h-4"></i></div>`}
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-white truncate">${inv.title}</div>
+                <div class="text-[11px] font-mono text-amber-300 font-bold">${fmt(inv.amount)}</div>
+              </div>
+            </div>
+            <button onclick="deleteInvoice('${p.id}', '${inv.id}')" class="p-1.5 text-slate-500 hover:text-rose-400">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+      refreshIcons();
+    }
+
+    function toggleDayPaid(pId, dId) {
+      const p = db.projects.find(x => x.id === pId);
+      if (!p) return;
+      const d = p.days.find(x => x.id === dId);
+      if (d) d.paid = !d.paid;
+      saveDb();
+      renderAll();
+    }
+
+    function saveFixedPaidAmount() {
+      const p = db.projects.find(x => x.id === activeProjectId);
+      if (!p) return;
+      p.fixedPaidAmount = parseFloat(document.getElementById('detFixedPaidInput').value || 0);
+      saveDb();
+      renderAll();
+    }
+
+    function deleteDay(pId, dId) {
+      const p = db.projects.find(x => x.id === pId);
+      if (!p) return;
+      p.days = p.days.filter(x => x.id !== dId);
+      saveDb();
+      renderAll();
+    }
+
+    function deleteInvoice(pId, iId) {
+      const p = db.projects.find(x => x.id === pId);
+      if (!p) return;
+      p.invoices = p.invoices.filter(x => x.id !== iId);
+      saveDb();
+      renderAll();
+    }
+
+    function deleteCurrentProject() {
+      if (!activeProjectId) return;
+      if (!confirm('Delete this project?')) return;
+      db.projects = db.projects.filter(x => x.id !== activeProjectId);
+      closeProjectDetailModal();
+      saveDb();
+      renderAll();
+    }
+
+    // --- CREATE / EDIT PROJECT ---
+    function openProjectFormModal() {
+      document.getElementById('projectForm').reset();
+      document.getElementById('pfId').value = '';
+      document.getElementById('pfCreatedAt').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('pfHeaderTitle').textContent = 'New Project';
+      document.getElementById('projectFormModal').classList.remove('hidden');
+    }
+
+    function editCurrentProject() {
+      const p = db.projects.find(x => x.id === activeProjectId);
+      if (!p) return;
+      document.getElementById('pfId').value = p.id;
+      document.getElementById('pfEmployer').value = p.employer;
+      document.getElementById('pfTitle').value = p.title;
+      document.getElementById('pfLocation').value = p.location;
+      document.getElementById('pfCreatedAt').value = p.createdAt || new Date().toISOString().slice(0, 10);
+      document.getElementById('pfStage').value = p.stage || 'IN_PROGRESS';
+      document.getElementById('pfFixedAmount').value = p.fixedAmount || '';
+      document.getElementById('pfHeaderTitle').textContent = 'Edit Project';
+      document.getElementById('projectFormModal').classList.remove('hidden');
+    }
+
+    function closeProjectFormModal() {
+      document.getElementById('projectFormModal').classList.add('hidden');
+    }
+
+    function handleProjectSave(e) {
+      e.preventDefault();
+      const id = document.getElementById('pfId').value;
+      const employer = document.getElementById('pfEmployer').value.trim();
+      const title = document.getElementById('pfTitle').value.trim();
+      const location = document.getElementById('pfLocation').value.trim();
+      const createdAt = document.getElementById('pfCreatedAt').value;
+      const stage = document.getElementById('pfStage').value;
+      const fixedAmount = parseFloat(document.getElementById('pfFixedAmount').value || 0);
+
+      if (id) {
+        const p = db.projects.find(x => x.id === id);
+        if (p) Object.assign(p, { employer, title, location, createdAt, stage, fixedAmount });
+      } else {
+        db.projects.unshift({
+          id: 'p_' + Date.now(),
+          employer,
+          title,
+          location,
+          createdAt,
+          stage,
+          fixedAmount,
+          fixedPaidAmount: 0,
+          days: [],
+          invoices: []
+        });
+      }
+      saveDb();
+      closeProjectFormModal();
+      renderAll();
+    }
+
+    // --- DAILY WORK EDITOR WITH AUTO MULTI-INTERVAL CALCULATOR ---
+    function switchWorkDayCalcMode(mode) {
+      dayCalcMode = mode;
+      const hBtn = document.getElementById('wdModeHourlyBtn');
+      const fBtn = document.getElementById('wdModeFixedBtn');
+      const hPanel = document.getElementById('wdHourlyCalcPanel');
+      const fPanel = document.getElementById('wdFixedPanel');
+
+      if (mode === 'HOURLY') {
+        hBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white transition';
+        fBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 transition';
+        hPanel.classList.remove('hidden');
+        fPanel.classList.add('hidden');
+        recalcDayEditor();
+      } else {
+        fBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white transition';
+        hBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 transition';
+        fPanel.classList.remove('hidden');
+        hPanel.classList.add('hidden');
+      }
+    }
+
+    function addDayIntervalRow(start = '08:00', end = '12:00') {
+      const box = document.getElementById('wdIntervalsBox');
+      const row = document.createElement('div');
+      row.className = 'wd-interval-row flex items-center gap-2';
+      row.innerHTML = `
+        <input type="time" value="${start}" oninput="recalcDayEditor()" class="wd-iv-start ios-input px-3 py-1.5 rounded-xl text-xs font-mono flex-1" required />
+        <span class="text-slate-500 text-xs">–</span>
+        <input type="time" value="${end}" oninput="recalcDayEditor()" class="wd-iv-end ios-input px-3 py-1.5 rounded-xl text-xs font-mono flex-1" required />
+        <button type="button" onclick="this.parentElement.remove(); recalcDayEditor();" class="p-1.5 text-rose-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      `;
+      box.appendChild(row);
+      refreshIcons();
+      recalcDayEditor();
+    }
+
+    function diffHours(s, e) {
+      if (!s || !e) return 0;
+      const [sh, sm] = s.split(':').map(Number);
+      const [eh, em] = e.split(':').map(Number);
+      const mins = (eh * 60 + em) - (sh * 60 + sm);
+      return mins > 0 ? +(mins / 60).toFixed(2) : 0;
+    }
+
+    function recalcDayEditor() {
+      const rows = document.querySelectorAll('.wd-interval-row');
+      let sumH = 0;
+      rows.forEach(r => {
+        sumH += diffHours(r.querySelector('.wd-iv-start').value, r.querySelector('.wd-iv-end').value);
+      });
+      const rate = parseFloat(document.getElementById('wdHourlyRate').value || 0);
+      const total = Math.round(sumH * rate);
+      document.getElementById('wdCalcHoursText').textContent = `${sumH.toFixed(1)} hrs`;
+      document.getElementById('wdCalcAmountText').textContent = `${total.toLocaleString('en-US')} ${db.currency}`;
+      return { sumH: +sumH.toFixed(2), rate, total };
+    }
+
+    function openWorkDayModal(editDayId = null, prefillDate = null) {
+      if (db.projects.length === 0) return openProjectFormModal();
+      const sel = document.getElementById('wdProjectId');
+      const targetProjId = activeProjectId || db.projects[0].id;
+      sel.innerHTML = db.projects.map(p => `<option value="${p.id}" ${p.id === targetProjId ? 'selected' : ''}>${p.employer} — ${p.title}</option>`).join('');
+
+      document.getElementById('workDayForm').reset();
+      document.getElementById('wdEditId').value = editDayId || '';
+      document.getElementById('wdProjectId').value = targetProjId;
+      document.getElementById('wdIntervalsBox').innerHTML = '';
+      tempPhotoData = null;
+      document.getElementById('wdInvPreview').classList.add('hidden');
+
+      const proj = db.projects.find(x => x.id === targetProjId);
+
+      if (editDayId && proj) {
+        const d = proj.days.find(x => x.id === editDayId);
+        if (d) {
+          document.getElementById('wdModalHeader').textContent = 'Edit Work Day';
+          document.getElementById('wdDate').value = d.date;
+          document.getElementById('wdLocation').value = d.location || proj.location;
+          document.getElementById('wdDesc').value = d.description;
+          document.getElementById('wdPaid').checked = !!d.paid;
+          document.getElementById('wdQuickInvoiceWrap').classList.add('hidden');
+
+          if (d.calcMode === 'FIXED') {
+            switchWorkDayCalcMode('FIXED');
+            document.getElementById('wdFixedAmountInput').value = d.amount;
+          } else {
+            switchWorkDayCalcMode('HOURLY');
+            document.getElementById('wdHourlyRate').value = d.hourlyRate || db.defaultHourlyRate || 100;
+            (d.intervals && d.intervals.length ? d.intervals : [{ start: '08:00', end: '16:00' }]).forEach(iv => addDayIntervalRow(iv.start, iv.end));
+          }
+          document.getElementById('workDayModal').classList.remove('hidden');
+          return;
+        }
+      }
+
+      document.getElementById('wdModalHeader').textContent = 'New Work Day';
+      document.getElementById('wdQuickInvoiceWrap').classList.remove('hidden');
+      document.getElementById('wdDate').value = prefillDate || new Date().toISOString().slice(0, 10);
+      document.getElementById('wdLocation').value = proj ? proj.location : '';
+      document.getElementById('wdHourlyRate').value = db.defaultHourlyRate || 100;
+
+      addDayIntervalRow('08:00', '12:00');
+      addDayIntervalRow('13:00', '17:00');
+      switchWorkDayCalcMode('HOURLY');
+
+      document.getElementById('workDayModal').classList.remove('hidden');
+    }
+
+    function closeWorkDayModal() {
+      document.getElementById('workDayModal').classList.add('hidden');
+    }
+
+    function handleWorkDaySave(e) {
+      e.preventDefault();
+      const projId = document.getElementById('wdProjectId').value;
+      const p = db.projects.find(x => x.id === projId);
+      if (!p) return;
+
+      const editId = document.getElementById('wdEditId').value;
+      const date = document.getElementById('wdDate').value;
+      const location = document.getElementById('wdLocation').value.trim() || p.location;
+      const description = document.getElementById('wdDesc').value.trim();
+      const paid = document.getElementById('wdPaid').checked;
+
+      let amount = 0, hourlyRate = 0, totalHours = 0, intervals = [];
+
+      if (dayCalcMode === 'HOURLY') {
+        const calc = recalcDayEditor();
+        hourlyRate = calc.rate;
+        db.defaultHourlyRate = hourlyRate;
+        totalHours = calc.sumH;
+        amount = calc.total;
+        document.querySelectorAll('.wd-interval-row').forEach(r => {
+          const start = r.querySelector('.wd-iv-start').value;
+          const end = r.querySelector('.wd-iv-end').value;
+          const h = diffHours(start, end);
+          if (h > 0) intervals.push({ start, end, hours: h });
+        });
+      } else {
+        amount = parseFloat(document.getElementById('wdFixedAmountInput').value || 0);
+      }
+
+      const dayPayload = {
+        id: editId || ('d_' + Date.now()),
+        date,
+        location,
+        description,
+        calcMode: dayCalcMode,
+        hourlyRate,
+        intervals,
+        totalHours,
+        amount,
+        paid
+      };
+
+      p.days = p.days || [];
+      if (editId) {
+        const idx = p.days.findIndex(x => x.id === editId);
+        if (idx > -1) p.days[idx] = dayPayload;
+      } else {
+        p.days.unshift(dayPayload);
+
+        const invTitle = document.getElementById('wdInvTitle').value.trim();
+        const invAmt = parseFloat(document.getElementById('wdInvAmount').value || 0);
+        if (invTitle || invAmt > 0 || tempPhotoData) {
+          p.invoices = p.invoices || [];
+          p.invoices.unshift({
+            id: 'inv_' + Date.now(),
+            date,
+            title: invTitle || `Invoice (${date})`,
+            amount: invAmt,
+            imageData: tempPhotoData
+          });
+        }
+      }
+
+      saveDb();
+      closeWorkDayModal();
+      renderAll();
+    }
+
+    // --- CALENDAR ---
+    function stepCalMonth(d) {
+      calMonth += d;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    }
+
+    function resetCalToday() {
+      const now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      selectedCalDate = now.toISOString().slice(0, 10);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      document.getElementById('calMonthHeader').textContent = `${MONTHS_EN[calMonth]} ${calYear}`;
+      const grid = document.getElementById('calendarGrid');
+      const firstDay = new Date(calYear, calMonth, 1);
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const offset = (firstDay.getDay() + 6) % 7;
+
+      const byDate = {};
+      db.projects.forEach(p => {
+        (p.days || []).forEach(d => {
+          if (!byDate[d.date]) byDate[d.date] = [];
+          byDate[d.date].push({ projectId: p.id, employer: p.employer, title: p.title, day: d });
+        });
+      });
+
+      let html = '';
+      for (let i = 0; i < offset; i++) {
+        html += `<div class="min-h-[58px] rounded-2xl bg-slate-950/30"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const items = byDate[dStr] || [];
+        const isSel = dStr === selectedCalDate;
+
+        html += `
+          <button onclick="selectedCalDate='${dStr}'; renderCalendar();"
+            class="min-h-[58px] p-1 rounded-2xl border text-left flex flex-col justify-between transition overflow-hidden ${
+              isSel ? 'bg-blue-600/25 border-blue-500 text-white' : 'bg-slate-950/60 border-white/5 text-slate-300'
+            }">
+            <span class="text-[11px] font-mono font-bold pl-0.5">${d}</span>
+            <div class="space-y-0.5 w-full">
+              ${items.slice(0, 2).map(it => `
+                <div class="px-1 py-0.5 rounded text-[9px] font-semibold truncate ${
+                  it.day.paid ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                }">${it.employer}</div>
+              `).join('')}
+              ${items.length > 2 ? `<div class="text-[9px] font-mono text-slate-400 pl-1">+${items.length - 2}</div>` : ''}
+            </div>
+          </button>
+        `;
+      }
+
+      grid.innerHTML = html;
+      document.getElementById('calSelectedDateLabel').textContent = selectedCalDate;
+
+      const dayList = document.getElementById('calSelectedDayList');
+      const selItems = byDate[selectedCalDate] || [];
+      if (selItems.length === 0) {
+        dayList.innerHTML = `<div class="text-xs text-slate-500 py-3 text-center">No work logged for this day.</div>`;
+      } else {
+        dayList.innerHTML = selItems.map(it => `
+          <div onclick="openProjectDetail('${it.projectId}')" class="p-3 rounded-2xl bg-slate-950/80 border ${it.day.paid ? 'border-emerald-500/30' : 'border-rose-500/30'} flex items-center justify-between cursor-pointer">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-blue-400 truncate">${it.employer}</div>
+              <div class="text-xs text-white truncate">${it.day.description}</div>
+            </div>
+            <span class="text-xs font-mono font-bold ${it.day.paid ? 'text-emerald-400' : 'text-rose-400'} shrink-0">${fmt(it.day.amount)}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // --- STANDALONE INVOICES & IMAGE COMPRESSION ---
+    function compressImage(e, previewId) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const max = 950;
+          let w = img.width, h = img.height;
+          if (w > h && w > max) { h = Math.round(h * (max / w)); w = max; }
+          else if (h > max) { w = Math.round(w * (max / h)); h = max; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          tempPhotoData = canvas.toDataURL('image/jpeg', 0.72);
+          const prev = document.getElementById(previewId);
+          prev.src = tempPhotoData;
+          prev.classList.remove('hidden');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function openInvoiceModal(preProjId = null) {
+      if (db.projects.length === 0) return openProjectFormModal();
+      const targetId = preProjId || activeProjectId || db.projects[0].id;
+      document.getElementById('invProjectId').innerHTML = db.projects.map(p => `<option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>${p.employer} — ${p.title}</option>`).join('');
+      document.getElementById('invoiceForm').reset();
+      document.getElementById('invProjectId').value = targetId;
+      document.getElementById('invDate').value = new Date().toISOString().slice(0, 10);
+      tempPhotoData = null;
+      document.getElementById('invPhotoPreview').classList.add('hidden');
+      document.getElementById('invoiceModal').classList.remove('hidden');
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById('invoiceModal').classList.add('hidden');
+    }
+
+    function handleInvoiceSave(e) {
+      e.preventDefault();
+      const p = db.projects.find(x => x.id === document.getElementById('invProjectId').value);
+      if (!p) return;
+      p.invoices = p.invoices || [];
+      p.invoices.unshift({
+        id: 'inv_' + Date.now(),
+        date: document.getElementById('invDate').value,
+        title: document.getElementById('invTitle').value.trim(),
+        amount: parseFloat(document.getElementById('invAmount').value || 0),
+        imageData: tempPhotoData
+      });
+      saveDb();
+      closeInvoiceModal();
+      renderAll();
+    }
+
+    function renderInvoicesTab() {
+      const box = document.getElementById('allInvoicesGrid');
+      const list = [];
+      db.projects.forEach(p => (p.invoices || []).forEach(inv => list.push({ p, inv })));
+      if (list.length === 0) {
+        box.innerHTML = `<div class="glass rounded-[24px] p-8 text-center text-xs text-slate-500">No invoices attached yet.</div>`;
+        return;
+      }
+      box.innerHTML = list.map(({ p, inv }) => `
+        <div class="glass rounded-2xl p-3 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            ${inv.imageData ? `<img src="${inv.imageData}" onclick="openLightbox('${inv.imageData}', '${inv.title}')" class="w-12 h-12 rounded-xl object-cover cursor-zoom-in shrink-0" />` : `<div class="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0"><i data-lucide="receipt" class="w-5 h-5"></i></div>`}
+            <div class="min-w-0">
+              <div class="text-[11px] font-bold text-blue-400 truncate">${p.employer}</div>
+              <div class="text-xs font-semibold text-white truncate">${inv.title}</div>
+              <div class="text-xs font-mono font-bold text-amber-300">${fmt(inv.amount)}</div>
+            </div>
+          </div>
+          <button onclick="deleteInvoice('${p.id}', '${inv.id}')" class="p-2 text-slate-500 hover:text-rose-400">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function openLightbox(src, title) {
+      document.getElementById('lightboxImage').src = src;
+      document.getElementById('lightboxTitle').textContent = title || '';
+      document.getElementById('lightboxModal').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.add('hidden');
+    }
+
+    // --- RELIABLE JSON BACKUP DOWNLOAD & iOS FILE SHARE ---
+    function buildBackupPayload() {
+      const accounts = getStoredAccounts();
+      return {
+        version: 'WorkOS_v4',
+        exportedAt: new Date().toISOString(),
+        activeUser: currentUser,
+        accounts,
+        userDatabase: db
+      };
+    }
+
+    function exportCompleteBackupJSON() {
+      const backup = buildBackupPayload();
+      const jsonStr = JSON.stringify(backup, null, 2);
+      const fileName = `workos_backup_${currentUser || 'user'}_${new Date().toISOString().slice(0, 10)}.json`;
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 400);
+    }
+
+    async function shareBackupFileIOS() {
+      const backup = buildBackupPayload();
+      const jsonStr = JSON.stringify(backup, null, 2);
+      const fileName = `workos_backup_${currentUser || 'user'}_${new Date().toISOString().slice(0, 10)}.json`;
+      const file = new File([jsonStr], fileName, { type: 'application/json' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'WorkOS Backup',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      exportCompleteBackupJSON();
+    }
+
+    function importFullBackupFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (!data || !data.userDatabase || !Array.isArray(data.userDatabase.projects)) {
+            return alert('Invalid backup file!');
+          }
+          const accs = getStoredAccounts();
+          if (data.accounts) Object.assign(accs, data.accounts);
+          saveStoredAccounts(accs);
+
+          const targetUser = data.activeUser || currentUser || 'user';
+          currentUser = targetUser;
+          db = data.userDatabase;
+          saveDb();
+          unlockApp(targetUser);
+          alert('Backup restored successfully!');
+        } catch (err) {
+          alert('Failed to load backup file!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshIcons();
+    });
+  </script>
+</body>
+</html>
